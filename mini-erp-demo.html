@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NovaERP · Demonstração Acadêmica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  :root{
+    --primary:#1E3A8A;
+    --secondary:#2563EB;
+    --success:#22C55E;
+    --warning:#F59E0B;
+    --error:#EF4444;
+    --bg:#F8FAFC;
+    --card:#FFFFFF;
+    --text:#0F172A;
+    --text-muted:#64748B;
+    --border:#E2E8F0;
+    --sidebar-w:264px;
+    --header-h:72px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{
+    font-family:'Inter',sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    height:100%;
+    overflow-x:hidden;
+  }
+  button{font-family:inherit;cursor:pointer;border:none;background:none;}
+  input, select{font-family:inherit;}
+
+  /* ===== Layout shell ===== */
+  .app{
+    display:grid;
+    grid-template-columns:var(--sidebar-w) 1fr;
+    grid-template-rows:var(--header-h) 1fr;
+    min-height:100vh;
+  }
+
+  /* ===== Sidebar ===== */
+  .sidebar{
+    grid-row:1/3;
+    background:linear-gradient(180deg,#0F1F4D 0%,#15235A 60%,#1E3A8A 100%);
+    color:#E5EAF7;
+    display:flex;
+    flex-direction:column;
+    position:fixed;
+    top:0;left:0;bottom:0;
+    width:var(--sidebar-w);
+    z-index:50;
+    box-shadow:2px 0 18px rgba(15,31,77,0.25);
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:22px 22px 20px;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+  }
+  .brand-mark{
+    width:38px;height:38px;
+    border-radius:10px;
+    background:linear-gradient(135deg,var(--secondary),#60A5FA);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:16px;color:#fff;
+    flex-shrink:0;
+    box-shadow:0 4px 12px rgba(37,99,235,0.4);
+  }
+  .brand-name-wrap{min-width:0;}
+  .brand-name{
+    font-weight:700;font-size:15px;color:#fff;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    line-height:1.2;
+  }
+  .brand-sub{font-size:11px;color:#94A6D6;letter-spacing:.02em;}
+
+  .nav{flex:1;padding:18px 14px;display:flex;flex-direction:column;gap:3px;}
+  .nav-label{
+    font-size:11px;font-weight:600;color:#7387BC;
+    text-transform:uppercase;letter-spacing:.08em;
+    padding:10px 12px 8px;
+  }
+  .nav-item{
+    display:flex;align-items:center;gap:12px;
+    padding:11px 14px;
+    border-radius:10px;
+    color:#C3CEEC;
+    font-size:14.5px;font-weight:500;
+    transition:background .15s, color .15s;
+    text-align:left;
+    width:100%;
+  }
+  .nav-item svg{width:19px;height:19px;flex-shrink:0;}
+  .nav-item:hover{background:rgba(255,255,255,0.07);color:#fff;}
+  .nav-item.active{
+    background:rgba(37,99,235,0.35);
+    color:#fff;
+    box-shadow:inset 3px 0 0 0 #60A5FA;
+  }
+  .sidebar-footer{
+    padding:16px 22px 20px;
+    font-size:11.5px;color:#7387BC;
+    border-top:1px solid rgba(255,255,255,0.08);
+  }
+
+  /* ===== Header ===== */
+  .header{
+    grid-column:2;
+    background:var(--card);
+    border-bottom:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 28px;
+    position:sticky;top:0;z-index:30;
+    margin-left:var(--sidebar-w);
+  }
+  .header-title{font-size:18px;font-weight:700;}
+  .header-sub{font-size:12.5px;color:var(--text-muted);margin-top:1px;}
+  .header-right{display:flex;align-items:center;gap:14px;}
+  .header-pill{
+    display:flex;align-items:center;gap:8px;
+    background:#EFF6FF;color:var(--secondary);
+    padding:7px 14px;border-radius:999px;
+    font-size:12.5px;font-weight:600;
+  }
+  .header-pill .dot{width:7px;height:7px;border-radius:999px;background:var(--success);}
+  .avatar{
+    width:36px;height:36px;border-radius:10px;
+    background:linear-gradient(135deg,var(--primary),var(--secondary));
+    color:#fff;font-weight:700;font-size:13px;
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  /* ===== Main content ===== */
+  .main{
+    grid-column:2;
+    margin-left:var(--sidebar-w);
+    padding:28px;
+    max-width:1320px;
+    width:100%;
+  }
+  .view{display:none;animation:fadeIn .35s ease;}
+  .view.active{display:block;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  /* ===== Cards / KPIs ===== */
+  .kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:18px;
+    margin-bottom:24px;
+  }
+  .kpi-card{
+    background:var(--card);
+    border-radius:16px;
+    padding:20px 22px;
+    border:1px solid var(--border);
+    box-shadow:0 1px 2px rgba(15,23,42,0.04);
+    position:relative;
+    overflow:hidden;
+    transition:transform .35s, box-shadow .35s;
+  }
+  .kpi-card.pulse{
+    transform:translateY(-2px);
+    box-shadow:0 10px 24px rgba(37,99,235,0.18);
+  }
+  .kpi-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .kpi-icon{
+    width:38px;height:38px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .kpi-icon svg{width:19px;height:19px;}
+  .kpi-icon.blue{background:#EFF6FF;color:var(--secondary);}
+  .kpi-icon.green{background:#ECFDF5;color:var(--success);}
+  .kpi-icon.amber{background:#FFFBEB;color:var(--warning);}
+  .kpi-icon.indigo{background:#EEF2FF;color:var(--primary);}
+  .kpi-trend{font-size:11.5px;font-weight:700;color:var(--success);display:flex;align-items:center;gap:3px;}
+  .kpi-value{font-size:26px;font-weight:800;letter-spacing:-0.02em;}
+  .kpi-label{font-size:12.5px;color:var(--text-muted);margin-top:4px;font-weight:500;}
+
+  .grid-2{display:grid;grid-template-columns:1.3fr 1fr;gap:18px;margin-bottom:24px;}
+  .panel{
+    background:var(--card);
+    border-radius:16px;
+    border:1px solid var(--border);
+    padding:22px;
+    box-shadow:0 1px 2px rgba(15,23,42,0.04);
+  }
+  .panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .panel-title{font-size:15px;font-weight:700;}
+  .panel-sub{font-size:12px;color:var(--text-muted);margin-top:2px;}
+  .charts-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:24px;}
+  .chart-wrap{height:230px;position:relative;}
+
+  /* ===== Forms ===== */
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:4px;}
+  .field label{font-size:12.5px;font-weight:600;color:#334155;}
+  .field input, .field select{
+    border:1.5px solid var(--border);
+    border-radius:10px;
+    padding:11px 13px;
+    font-size:14px;
+    color:var(--text);
+    transition:border-color .15s, box-shadow .15s;
+    background:#fff;
+  }
+  .field input:focus, .field select:focus{
+    outline:none;
+    border-color:var(--secondary);
+    box-shadow:0 0 0 3px rgba(37,99,235,0.12);
+  }
+  .field-full{grid-column:1/-1;}
+  .total-preview{
+    grid-column:1/-1;
+    display:flex;align-items:center;justify-content:space-between;
+    background:#F0F5FF;
+    border:1px dashed #BFD3FB;
+    border-radius:12px;
+    padding:14px 18px;
+    margin-top:4px;
+  }
+  .total-preview .label{font-size:13px;color:var(--primary);font-weight:600;}
+  .total-preview .value{font-size:20px;font-weight:800;color:var(--primary);}
+  .btn-primary{
+    grid-column:1/-1;
+    background:linear-gradient(135deg,var(--secondary),var(--primary));
+    color:#fff;
+    font-weight:700;font-size:15px;
+    padding:14px;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    margin-top:8px;
+    box-shadow:0 6px 16px rgba(37,99,235,0.3);
+    transition:transform .15s, box-shadow .15s;
+  }
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(37,99,235,0.38);}
+  .btn-primary:active{transform:translateY(0);}
+  .btn-primary svg{width:18px;height:18px;}
+  .btn-secondary{
+    border:1.5px solid var(--border);
+    border-radius:10px;
+    padding:9px 16px;
+    font-size:13px;font-weight:600;
+    color:var(--text);
+    display:flex;align-items:center;gap:7px;
+    background:#fff;
+    transition:background .15s,border-color .15s;
+  }
+  .btn-secondary:hover{background:#F8FAFC;border-color:#CBD5E1;}
+  .btn-secondary svg{width:15px;height:15px;}
+
+  /* ===== Flow animation (signature element) ===== */
+  .flow-wrap{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:8px 6px 4px;
+    position:relative;
+  }
+  .flow-line{
+    position:absolute;
+    top:34px;left:46px;right:46px;
+    height:3px;
+    background:var(--border);
+    border-radius:3px;
+    z-index:0;
+    overflow:hidden;
+  }
+  .flow-line-fill{
+    position:absolute;top:0;left:0;height:100%;width:0%;
+    background:linear-gradient(90deg,var(--secondary),var(--success));
+    border-radius:3px;
+    transition:width .6s ease;
+  }
+  .flow-node{
+    display:flex;flex-direction:column;align-items:center;gap:9px;
+    position:relative;z-index:1;
+    width:25%;
+  }
+  .flow-circle{
+    width:68px;height:68px;border-radius:50%;
+    background:#fff;
+    border:3px solid var(--border);
+    display:flex;align-items:center;justify-content:center;
+    color:#94A3B8;
+    transition:border-color .35s, color .35s, transform .35s, box-shadow .35s;
+  }
+  .flow-circle svg{width:28px;height:28px;}
+  .flow-node.done .flow-circle{
+    border-color:var(--success);
+    color:var(--success);
+    box-shadow:0 0 0 5px rgba(34,197,94,0.13);
+  }
+  .flow-node.active .flow-circle{
+    border-color:var(--secondary);
+    color:var(--secondary);
+    transform:scale(1.12);
+    box-shadow:0 0 0 7px rgba(37,99,235,0.16);
+    animation:flowPulse 1s ease-in-out infinite;
+  }
+  @keyframes flowPulse{
+    0%,100%{box-shadow:0 0 0 7px rgba(37,99,235,0.16);}
+    50%{box-shadow:0 0 0 11px rgba(37,99,235,0.08);}
+  }
+  .flow-label{font-size:12.5px;font-weight:700;color:#94A3B8;transition:color .35s;}
+  .flow-node.active .flow-label, .flow-node.done .flow-label{color:var(--text);}
+  .flow-sub{font-size:11px;color:var(--text-muted);text-align:center;min-height:14px;}
+
+  .toast{
+    position:fixed;bottom:26px;right:26px;
+    background:var(--text);color:#fff;
+    padding:14px 20px;border-radius:12px;
+    font-size:13.5px;font-weight:600;
+    display:flex;align-items:center;gap:10px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.25);
+    transform:translateY(20px);opacity:0;
+    transition:transform .3s, opacity .3s;
+    z-index:200;
+  }
+  .toast.show{transform:translateY(0);opacity:1;}
+  .toast svg{width:18px;height:18px;color:var(--success);flex-shrink:0;}
+
+  /* ===== Tables ===== */
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  thead th{
+    text-align:left;
+    font-size:11.5px;
+    color:var(--text-muted);
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    font-weight:700;
+    padding:10px 14px;
+    border-bottom:1.5px solid var(--border);
+  }
+  tbody td{
+    padding:13px 14px;
+    border-bottom:1px solid #F1F5F9;
+    color:#1E293B;
+  }
+  tbody tr:hover{background:#F8FAFC;}
+  .badge{
+    display:inline-flex;align-items:center;gap:5px;
+    padding:4px 10px;border-radius:999px;
+    font-size:11.5px;font-weight:700;
+  }
+  .badge.green{background:#ECFDF5;color:#16A34A;}
+  .badge.blue{background:#EFF6FF;color:var(--secondary);}
+  .badge.amber{background:#FFFBEB;color:#B45309;}
+  .empty-state{
+    text-align:center;padding:50px 20px;color:var(--text-muted);
+  }
+  .empty-state svg{width:42px;height:42px;color:#CBD5E1;margin-bottom:12px;}
+  .empty-state p{font-size:13.5px;}
+
+  .settings-row{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 0;border-bottom:1px solid #F1F5F9;
+  }
+  .settings-row:last-child{border-bottom:none;}
+  .settings-row .label-block .t{font-size:13.5px;font-weight:600;}
+  .settings-row .label-block .s{font-size:12px;color:var(--text-muted);}
+  .inline-edit{
+    border:1.5px solid var(--border);border-radius:8px;
+    padding:8px 11px;font-size:13.5px;width:220px;
+  }
+  .inline-edit:focus{outline:none;border-color:var(--secondary);}
+
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:8px;}
+
+  @media (max-width:1100px){
+    .kpi-grid{grid-template-columns:repeat(2,1fr);}
+    .grid-2{grid-template-columns:1fr;}
+    .charts-grid{grid-template-columns:1fr;}
+    .form-grid{grid-template-columns:1fr;}
+  }
+  @media (max-width:780px){
+    :root{--sidebar-w:0px;}
+    .sidebar{transform:translateX(-100%);transition:transform .25s;}
+    .sidebar.open{transform:translateX(0);width:240px;}
+    .header,.main{margin-left:0;}
+    .kpi-grid{grid-template-columns:1fr 1fr;}
+    .flow-circle{width:52px;height:52px;}
+    .flow-circle svg{width:22px;height:22px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">N</div>
+      <div class="brand-name-wrap">
+        <div class="brand-name" id="brandNameDisplay">NovaERP Demo</div>
+        <div class="brand-sub">Sistema Integrado</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-label">Visão Geral</div>
+      <button class="nav-item active" data-view="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-item" data-view="nova">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+        Nova Operação
+      </button>
+
+      <div class="nav-label">Setores</div>
+      <button class="nav-item" data-view="fiscal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+        Notas Fiscais
+      </button>
+      <button class="nav-item" data-view="financeiro">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5c0-1.4 1.2-2.2 2.5-2.2s2.5.7 2.5 1.9c0 2.6-5 1.3-5 4 0 1.2 1.1 2 2.5 2s2.5-.8 2.5-2"/></svg>
+        Financeiro
+      </button>
+      <button class="nav-item" data-view="contabilidade">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v16M8 13.5h13M8 17h13"/></svg>
+        Contabilidade
+      </button>
+
+      <div class="nav-label">Sistema</div>
+      <button class="nav-item" data-view="config">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.04 1.56V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 8.96 19a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.04H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 8.96a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1.04-1.56V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15.04 4.6a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.13.5.5.92 1.04 1.04H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"/></svg>
+        Configurações
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      Demonstração acadêmica<br>Dados simulados em memória
+    </div>
+  </aside>
+
+  <!-- ===== HEADER ===== -->
+  <header class="header">
+    <div>
+      <div class="header-title" id="pageTitle">Dashboard</div>
+      <div class="header-sub" id="pageSub">Visão consolidada das operações</div>
+    </div>
+    <div class="header-right">
+      <div class="header-pill"><span class="dot"></span> Ambiente de simulação</div>
+      <div class="avatar">AC</div>
+    </div>
+  </header>
+
+  <!-- ===== MAIN ===== -->
+  <main class="main">
+
+    <!-- ---------- DASHBOARD ---------- -->
+    <section class="view active" id="view-dashboard">
+      <div class="kpi-grid">
+        <div class="kpi-card" id="kpi-nf">
+          <div class="kpi-top">
+            <div class="kpi-icon blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+            </div>
+          </div>
+          <div class="kpi-value" id="kpiNfValue">0</div>
+          <div class="kpi-label">Notas Fiscais Emitidas</div>
+        </div>
+        <div class="kpi-card" id="kpi-fin">
+          <div class="kpi-top">
+            <div class="kpi-icon green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5c0-1.4 1.2-2.2 2.5-2.2s2.5.7 2.5 1.9c0 2.6-5 1.3-5 4 0 1.2 1.1 2 2.5 2s2.5-.8 2.5-2"/></svg>
+            </div>
+          </div>
+          <div class="kpi-value" id="kpiFinValue">R$ 0,00</div>
+          <div class="kpi-label">Receita Financeira</div>
+        </div>
+        <div class="kpi-card" id="kpi-cont">
+          <div class="kpi-top">
+            <div class="kpi-icon indigo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v16M8 13.5h13M8 17h13"/></svg>
+            </div>
+          </div>
+          <div class="kpi-value" id="kpiContValue">R$ 0,00</div>
+          <div class="kpi-label">Receitas Contábeis</div>
+        </div>
+        <div class="kpi-card" id="kpi-total">
+          <div class="kpi-top">
+            <div class="kpi-icon amber">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+          </div>
+          <div class="kpi-value" id="kpiTotalValue">R$ 0,00</div>
+          <div class="kpi-label">Valor Total das Operações</div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="panel">
+          <div class="panel-head">
+            <div><div class="panel-title">Receita por mês</div><div class="panel-sub">Acumulado simulado</div></div>
+          </div>
+          <div class="chart-wrap"><canvas id="chartReceitaMes"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <div><div class="panel-title">Evolução das vendas</div><div class="panel-sub">Por operação registrada</div></div>
+          </div>
+          <div class="chart-wrap"><canvas id="chartEvolucao"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <div><div class="panel-title">Distribuição dos documentos</div><div class="panel-sub">Fiscal · Financeiro · Contábil</div></div>
+          </div>
+          <div class="chart-wrap"><canvas id="chartDistribuicao"></canvas></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div><div class="panel-title">Últimas operações</div><div class="panel-sub">Registros mais recentes em todos os setores</div></div>
+          <button class="btn-secondary" onclick="goToView('nova')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+            Nova operação
+          </button>
+        </div>
+        <div id="recentTableWrap"></div>
+      </div>
+    </section>
+
+    <!-- ---------- NOVA OPERAÇÃO ---------- -->
+    <section class="view" id="view-nova">
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-head">
+            <div><div class="panel-title">Nova Operação</div><div class="panel-sub">Simule uma venda e veja o impacto nos três setores</div></div>
+          </div>
+          <form id="vendaForm" class="form-grid">
+            <div class="field field-full">
+              <label>Cliente</label>
+              <input type="text" id="inpCliente" value="Construtora Horizonte Ltda" required>
+            </div>
+            <div class="field field-full">
+              <label>Produto / Serviço</label>
+              <input type="text" id="inpProduto" value="Licença de Software ERP" required>
+            </div>
+            <div class="field">
+              <label>Quantidade</label>
+              <input type="number" id="inpQtd" value="3" min="1" step="1" required>
+            </div>
+            <div class="field">
+              <label>Valor Unitário (R$)</label>
+              <input type="number" id="inpValor" value="1250.00" min="0" step="0.01" required>
+            </div>
+
+            <div class="total-preview field-full">
+              <span class="label">Valor total da operação</span>
+              <span class="value" id="totalPreview">R$ 3.750,00</span>
+            </div>
+
+            <button type="submit" class="btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+              Simular Venda
+            </button>
+          </form>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div><div class="panel-title">Impacto da operação</div><div class="panel-sub">Uma venda, três registros automáticos</div></div>
+          </div>
+
+          <div class="flow-wrap">
+            <div class="flow-line"><div class="flow-line-fill" id="flowFill"></div></div>
+
+            <div class="flow-node" id="flowVenda">
+              <div class="flow-circle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h2l2.4 12.4a2 2 0 0 0 2 1.6h7.2a2 2 0 0 0 2-1.6L21 7H6"/><circle cx="9" cy="20" r="1"/><circle cx="17" cy="20" r="1"/></svg>
+              </div>
+              <div class="flow-label">Venda</div>
+              <div class="flow-sub" id="flowVendaSub">Aguardando</div>
+            </div>
+
+            <div class="flow-node" id="flowNF">
+              <div class="flow-circle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+              </div>
+              <div class="flow-label">Nota Fiscal</div>
+              <div class="flow-sub" id="flowNFSub">—</div>
+            </div>
+
+            <div class="flow-node" id="flowFinanceiro">
+              <div class="flow-circle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5c0-1.4 1.2-2.2 2.5-2.2s2.5.7 2.5 1.9c0 2.6-5 1.3-5 4 0 1.2 1.1 2 2.5 2s2.5-.8 2.5-2"/></svg>
+              </div>
+              <div class="flow-label">Financeiro</div>
+              <div class="flow-sub" id="flowFinSub">—</div>
+            </div>
+
+            <div class="flow-node" id="flowContabil">
+              <div class="flow-circle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v16M8 13.5h13M8 17h13"/></svg>
+              </div>
+              <div class="flow-label">Contabilidade</div>
+              <div class="flow-sub" id="flowContSub">—</div>
+            </div>
+          </div>
+
+          <div id="flowResultWrap" style="margin-top:22px;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- NOTAS FISCAIS ---------- -->
+    <section class="view" id="view-fiscal">
+      <div class="panel">
+        <div class="panel-head">
+          <div><div class="panel-title">Notas Fiscais Emitidas</div><div class="panel-sub">Documento gerado automaticamente a cada venda simulada</div></div>
+          <button class="btn-secondary" onclick="goToView('nova')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+            Nova operação
+          </button>
+        </div>
+        <div id="fiscalTableWrap"></div>
+      </div>
+    </section>
+
+    <!-- ---------- FINANCEIRO ---------- -->
+    <section class="view" id="view-financeiro">
+      <div class="panel">
+        <div class="panel-head">
+          <div><div class="panel-title">Lançamentos Financeiros</div><div class="panel-sub">Conta a receber gerada a partir da Nota Fiscal</div></div>
+          <button class="btn-secondary" onclick="goToView('nova')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+            Nova operação
+          </button>
+        </div>
+        <div id="financeiroTableWrap"></div>
+      </div>
+    </section>
+
+    <!-- ---------- CONTABILIDADE ---------- -->
+    <section class="view" id="view-contabilidade">
+      <div class="panel">
+        <div class="panel-head">
+          <div><div class="panel-title">Lançamentos Contábeis</div><div class="panel-sub">Partida dobrada simplificada (didática)</div></div>
+          <button class="btn-secondary" onclick="goToView('nova')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+            Nova operação
+          </button>
+        </div>
+        <div id="contabilTableWrap"></div>
+      </div>
+    </section>
+
+    <!-- ---------- CONFIGURAÇÕES ---------- -->
+    <section class="view" id="view-config">
+      <div class="panel" style="max-width:560px;">
+        <div class="panel-head">
+          <div><div class="panel-title">Configurações</div><div class="panel-sub">Personalize os dados exibidos na demonstração</div></div>
+        </div>
+        <div class="settings-row">
+          <div class="label-block"><div class="t">Nome da empresa</div><div class="s">Exibido na sidebar do sistema</div></div>
+          <input class="inline-edit" id="cfgEmpresa" value="NovaERP Demo">
+        </div>
+        <div class="settings-row">
+          <div class="label-block"><div class="t">Cliente padrão</div><div class="s">Pré-preenchido em Nova Operação</div></div>
+          <input class="inline-edit" id="cfgCliente" value="Construtora Horizonte Ltda">
+        </div>
+        <div class="settings-row">
+          <div class="label-block"><div class="t">Produto padrão</div><div class="s">Pré-preenchido em Nova Operação</div></div>
+          <input class="inline-edit" id="cfgProduto" value="Licença de Software ERP">
+        </div>
+        <div class="settings-row">
+          <div class="label-block"><div class="t">Limpar dados simulados</div><div class="s">Remove todas as operações em memória</div></div>
+          <button class="btn-secondary" onclick="resetData()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6"/></svg>
+            Limpar
+          </button>
+        </div>
+        <div style="margin-top:18px;">
+          <button class="btn-primary" style="grid-column:auto;width:100%;" onclick="applyConfig()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            Salvar alterações
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+  <span id="toastMsg">Operação registrada com sucesso</span>
+</div>
+
+<script>
+/* ============================================================
+   ESTADO EM MEMÓRIA
+   ============================================================ */
+const state = {
+  empresa: "NovaERP Demo",
+  operacoes: [],   // {id, data, cliente, produto, qtd, valorUnit, total}
+  notas: [],       // {id, numero, cliente, produto, valor, data, status}
+  financeiro: [],  // {id, descricao, cliente, valor, data, status, vencimento}
+  contabil: [],    // {id, historico, debito, credito, valor, data}
+  seq: { nf: 1000, fin: 5000, cont: 9000 }
+};
+
+let charts = {};
+
+/* ============================================================
+   NAVEGAÇÃO
+   ============================================================ */
+const titles = {
+  dashboard: ["Dashboard", "Visão consolidada das operações"],
+  nova: ["Nova Operação", "Simule uma venda e veja a integração entre setores"],
+  fiscal: ["Notas Fiscais", "Documentos fiscais emitidos automaticamente"],
+  financeiro: ["Financeiro", "Lançamentos de contas a receber"],
+  contabilidade: ["Contabilidade", "Partidas contábeis geradas pela venda"],
+  config: ["Configurações", "Personalize os dados da demonstração"]
+};
+
+function goToView(name){
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  const btn = document.querySelector(`.nav-item[data-view="${name}"]`);
+  if(btn) btn.classList.add('active');
+  document.getElementById('pageTitle').textContent = titles[name][0];
+  document.getElementById('pageSub').textContent = titles[name][1];
+  document.getElementById('sidebar').classList.remove('open');
+  if(name === 'dashboard') renderCharts();
+}
+
+document.querySelectorAll('.nav-item').forEach(btn => {
+  btn.addEventListener('click', () => goToView(btn.dataset.view));
+});
+
+/* ============================================================
+   FORMATAÇÃO
+   ============================================================ */
+const fmtBRL = v => v.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+const fmtData = d => d.toLocaleDateString('pt-BR');
+const fmtDataHora = d => d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+
+/* ============================================================
+   PREVIEW DO TOTAL NO FORMULÁRIO
+   ============================================================ */
+function updateTotalPreview(){
+  const qtd = parseFloat(document.getElementById('inpQtd').value) || 0;
+  const valor = parseFloat(document.getElementById('inpValor').value) || 0;
+  document.getElementById('totalPreview').textContent = fmtBRL(qtd * valor);
+}
+document.getElementById('inpQtd').addEventListener('input', updateTotalPreview);
+document.getElementById('inpValor').addEventListener('input', updateTotalPreview);
+
+/* ============================================================
+   SUBMISSÃO: SIMULAR VENDA
+   ============================================================ */
+document.getElementById('vendaForm').addEventListener('submit', function(e){
+  e.preventDefault();
+
+  const cliente = document.getElementById('inpCliente').value.trim() || "Cliente não informado";
+  const produto = document.getElementById('inpProduto').value.trim() || "Produto não informado";
+  const qtd = parseFloat(document.getElementById('inpQtd').value) || 1;
+  const valorUnit = parseFloat(document.getElementById('inpValor').value) || 0;
+  const total = qtd * valorUnit;
+  const agora = new Date();
+
+  const opId = state.operacoes.length + 1;
+  state.operacoes.push({ id: opId, data: agora, cliente, produto, qtd, valorUnit, total });
+
+  runFlowAnimation({ cliente, produto, qtd, valorUnit, total, agora });
+});
+
+/* ============================================================
+   ANIMAÇÃO DO FLUXO + CRIAÇÃO DOS REGISTROS
+   ============================================================ */
+function setNode(id, mode){ // mode: 'active' | 'done' | 'reset'
+  const el = document.getElementById(id);
+  el.classList.remove('active','done');
+  if(mode) el.classList.add(mode);
+}
+
+function resetFlow(){
+  ['flowVenda','flowNF','flowFinanceiro','flowContabil'].forEach(id => setNode(id, null));
+  document.getElementById('flowFill').style.width = '0%';
+  document.getElementById('flowVendaSub').textContent = 'Aguardando';
+  document.getElementById('flowNFSub').textContent = '—';
+  document.getElementById('flowFinSub').textContent = '—';
+  document.getElementById('flowContSub').textContent = '—';
+  document.getElementById('flowResultWrap').innerHTML = '';
+}
+
+function runFlowAnimation(op){
+  resetFlow();
+  const fill = document.getElementById('flowFill');
+
+  // Passo 1 — Venda
+  setNode('flowVenda', 'active');
+  document.getElementById('flowVendaSub').textContent = fmtBRL(op.total);
+  fill.style.width = '8%';
+
+  setTimeout(() => {
+    setNode('flowVenda', 'done');
+    setNode('flowNF', 'active');
+    fill.style.width = '38%';
+  }, 650);
+
+  // Passo 2 — Nota Fiscal
+  setTimeout(() => {
+    const nf = criarNotaFiscal(op);
+    document.getElementById('flowNFSub').textContent = 'NF-e nº ' + nf.numero;
+    setNode('flowNF', 'done');
+    setNode('flowFinanceiro', 'active');
+    fill.style.width = '64%';
+  }, 1400);
+
+  // Passo 3 — Financeiro
+  setTimeout(() => {
+    const fin = criarLancamentoFinanceiro(op);
+    document.getElementById('flowFinSub').textContent = fmtBRL(fin.valor) + ' a receber';
+    setNode('flowFinanceiro', 'done');
+    setNode('flowContabil', 'active');
+    fill.style.width = '90%';
+  }, 2150);
+
+  // Passo 4 — Contabilidade
+  setTimeout(() => {
+    const cont = criarLancamentoContabil(op);
+    document.getElementById('flowContSub').textContent = 'Lote ' + cont.id;
+    setNode('flowContabil', 'done');
+    fill.style.width = '100%';
+
+    renderAll();
+    showToast('Venda simulada: NF, Financeiro e Contábil gerados');
+    showFlowResult(op);
+  }, 2900);
+}
+
+function showFlowResult(op){
+  document.getElementById('flowResultWrap').innerHTML = `
+    <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;">
+      <svg style="width:20px;height:20px;color:var(--success);flex-shrink:0;margin-top:1px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/></svg>
+      <div>
+        <div style="font-weight:700;font-size:13.5px;color:#15803D;margin-bottom:3px;">Integração concluída</div>
+        <div style="font-size:12.5px;color:#166534;line-height:1.5;">
+          A venda de <strong>${escapeHtml(op.produto)}</strong> para <strong>${escapeHtml(op.cliente)}</strong>
+          gerou automaticamente 1 Nota Fiscal, 1 lançamento Financeiro e 1 lançamento Contábil — todos vinculados ao valor de ${fmtBRL(op.total)}.
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ============================================================
+   CRIAÇÃO DOS REGISTROS (Fiscal / Financeiro / Contábil)
+   ============================================================ */
+function criarNotaFiscal(op){
+  const nf = {
+    id: state.notas.length + 1,
+    numero: state.seq.nf++,
+    cliente: op.cliente,
+    produto: op.produto,
+    qtd: op.qtd,
+    valor: op.total,
+    data: op.agora,
+    status: 'Autorizada'
+  };
+  state.notas.push(nf);
+  return nf;
+}
+
+function criarLancamentoFinanceiro(op){
+  const vencimento = new Date(op.agora.getTime() + 30*24*60*60*1000);
+  const fin = {
+    id: state.financeiro.length + 1,
+    codigo: 'REC-' + state.seq.fin++,
+    descricao: 'Conta a receber — ' + op.produto,
+    cliente: op.cliente,
+    valor: op.total,
+    data: op.agora,
+    vencimento,
+    status: 'Pendente'
+  };
+  state.financeiro.push(fin);
+  return fin;
+}
+
+function criarLancamentoContabil(op){
+  const cont = {
+    id: 'LC-' + state.seq.cont++,
+    data: op.agora,
+    historico: 'Venda de mercadorias/serviços — ' + op.cliente,
+    debito: 'Clientes a Receber (Ativo Circulante)',
+    credito: 'Receita de Vendas (Resultado)',
+    valor: op.total
+  };
+  state.contabil.push(cont);
+  return cont;
+}
+
+/* ============================================================
+   RENDERIZAÇÃO — TABELAS
+   ============================================================ */
+function renderFiscalTable(){
+  const wrap = document.getElementById('fiscalTableWrap');
+  if(state.notas.length === 0){ wrap.innerHTML = emptyState('Nenhuma nota fiscal emitida ainda.'); return; }
+  let rows = state.notas.slice().reverse().map(n => `
+    <tr>
+      <td><strong>NF-e ${n.numero}</strong></td>
+      <td>${escapeHtml(n.cliente)}</td>
+      <td>${escapeHtml(n.produto)}</td>
+      <td>${n.qtd}</td>
+      <td>${fmtBRL(n.valor)}</td>
+      <td>${fmtDataHora(n.data)}</td>
+      <td><span class="badge green">${n.status}</span></td>
+    </tr>`).join('');
+  wrap.innerHTML = tableShell(['Número','Cliente','Produto','Qtd.','Valor','Emissão','Status'], rows);
+}
+
+function renderFinanceiroTable(){
+  const wrap = document.getElementById('financeiroTableWrap');
+  if(state.financeiro.length === 0){ wrap.innerHTML = emptyState('Nenhum lançamento financeiro ainda.'); return; }
+  let rows = state.financeiro.slice().reverse().map(f => `
+    <tr>
+      <td><strong>${f.codigo}</strong></td>
+      <td>${escapeHtml(f.cliente)}</td>
+      <td>${escapeHtml(f.descricao)}</td>
+      <td>${fmtBRL(f.valor)}</td>
+      <td>${fmtData(f.vencimento)}</td>
+      <td><span class="badge amber">${f.status}</span></td>
+    </tr>`).join('');
+  wrap.innerHTML = tableShell(['Código','Cliente','Descrição','Valor','Vencimento','Status'], rows);
+}
+
+function renderContabilTable(){
+  const wrap = document.getElementById('contabilTableWrap');
+  if(state.contabil.length === 0){ wrap.innerHTML = emptyState('Nenhum lançamento contábil ainda.'); return; }
+  let rows = state.contabil.slice().reverse().map(c => `
+    <tr>
+      <td><strong>${c.id}</strong></td>
+      <td>${escapeHtml(c.historico)}</td>
+      <td>${escapeHtml(c.debito)}</td>
+      <td>${escapeHtml(c.credito)}</td>
+      <td>${fmtBRL(c.valor)}</td>
+      <td>${fmtData(c.data)}</td>
+    </tr>`).join('');
+  wrap.innerHTML = tableShell(['Lote','Histórico','Débito','Crédito','Valor','Data'], rows);
+}
+
+function renderRecentTable(){
+  const wrap = document.getElementById('recentTableWrap');
+  if(state.operacoes.length === 0){ wrap.innerHTML = emptyState('Nenhuma operação simulada ainda. Crie a primeira em "Nova Operação".'); return; }
+  let rows = state.operacoes.slice().reverse().slice(0,6).map(o => `
+    <tr>
+      <td>${fmtDataHora(o.data)}</td>
+      <td>${escapeHtml(o.cliente)}</td>
+      <td>${escapeHtml(o.produto)}</td>
+      <td>${o.qtd}</td>
+      <td>${fmtBRL(o.total)}</td>
+      <td><span class="badge blue">NF + Fin. + Cont.</span></td>
+    </tr>`).join('');
+  wrap.innerHTML = tableShell(['Data','Cliente','Produto','Qtd.','Total','Integração'], rows);
+}
+
+function tableShell(headers, rows){
+  return `<div style="overflow-x:auto;"><table>
+    <thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+function emptyState(msg){
+  return `<div class="empty-state">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+    <p>${msg}</p>
+  </div>`;
+}
+
+/* ============================================================
+   RENDERIZAÇÃO — KPIs
+   ============================================================ */
+function renderKpis(){
+  const totalNf = state.notas.length;
+  const receitaFin = state.financeiro.reduce((s,f) => s + f.valor, 0);
+  const receitaCont = state.contabil.reduce((s,c) => s + c.valor, 0);
+  const totalOps = state.operacoes.reduce((s,o) => s + o.total, 0);
+
+  document.getElementById('kpiNfValue').textContent = totalNf;
+  document.getElementById('kpiFinValue').textContent = fmtBRL(receitaFin);
+  document.getElementById('kpiContValue').textContent = fmtBRL(receitaCont);
+  document.getElementById('kpiTotalValue').textContent = fmtBRL(totalOps);
+
+  ['kpi-nf','kpi-fin','kpi-cont','kpi-total'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.add('pulse');
+    setTimeout(() => el.classList.remove('pulse'), 700);
+  });
+}
+
+/* ============================================================
+   RENDERIZAÇÃO — GRÁFICOS (Chart.js)
+   ============================================================ */
+function monthKey(d){ return d.toLocaleDateString('pt-BR', {month:'short'}).replace('.',''); }
+
+function renderCharts(){
+  const ctxColor = '#64748B';
+  Chart.defaults.font.family = "'Inter', sans-serif";
+  Chart.defaults.color = ctxColor;
+
+  // ---- Receita por mês ----
+  const mesesMap = {};
+  state.operacoes.forEach(o => {
+    const key = monthKey(o.data);
+    mesesMap[key] = (mesesMap[key] || 0) + o.total;
+  });
+  let mesesLabels = Object.keys(mesesMap);
+  let mesesData = Object.values(mesesMap);
+  if(mesesLabels.length === 0){ mesesLabels = ['Sem dados']; mesesData = [0]; }
+
+  renderOrUpdate('chartReceitaMes', 'line', {
+    labels: mesesLabels,
+    datasets: [{
+      label: 'Receita',
+      data: mesesData,
+      borderColor: '#2563EB',
+      backgroundColor: 'rgba(37,99,235,0.12)',
+      fill: true,
+      tension: 0.35,
+      pointBackgroundColor: '#2563EB',
+      pointRadius: 4
+    }]
+  }, simpleLineOptions());
+
+  // ---- Evolução das vendas ----
+  const evoLabels = state.operacoes.map((o,i) => 'Op. ' + (i+1));
+  const evoData = state.operacoes.map(o => o.total);
+  renderOrUpdate('chartEvolucao', 'line', {
+    labels: evoLabels.length ? evoLabels : ['Sem dados'],
+    datasets: [{
+      label: 'Valor da venda',
+      data: evoData.length ? evoData : [0],
+      borderColor: '#22C55E',
+      backgroundColor: 'rgba(34,197,94,0.12)',
+      fill: true,
+      tension: 0.3,
+      pointBackgroundColor: '#22C55E',
+      pointRadius: 4
+    }]
+  }, simpleLineOptions());
+
+  // ---- Distribuição dos documentos ----
+  renderOrUpdate('chartDistribuicao', 'doughnut', {
+    labels: ['Notas Fiscais','Financeiro','Contábil'],
+    datasets: [{
+      data: [state.notas.length, state.financeiro.length, state.contabil.length],
+      backgroundColor: ['#2563EB','#22C55E','#1E3A8A'],
+      borderWidth: 0,
+      hoverOffset: 6
+    }]
+  }, {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{size:11.5} } } },
+    cutout:'62%'
+  });
+}
+
+function simpleLineOptions(){
+  return {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ display:false } },
+    scales:{
+      y:{ beginAtZero:true, grid:{ color:'#F1F5F9' }, ticks:{ callback:v => 'R$ ' + v } },
+      x:{ grid:{ display:false } }
+    }
+  };
+}
+
+function renderOrUpdate(canvasId, type, data, options){
+  if(charts[canvasId]){
+    charts[canvasId].data = data;
+    charts[canvasId].options = options;
+    charts[canvasId].update();
+  } else {
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    charts[canvasId] = new Chart(ctx, { type, data, options });
+  }
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+function showToast(msg){
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+/* ============================================================
+   CONFIGURAÇÕES
+   ============================================================ */
+function applyConfig(){
+  const empresa = document.getElementById('cfgEmpresa').value.trim() || 'NovaERP Demo';
+  const cliente = document.getElementById('cfgCliente').value.trim();
+  const produto = document.getElementById('cfgProduto').value.trim();
+
+  state.empresa = empresa;
+  document.getElementById('brandNameDisplay').textContent = empresa;
+
+  if(cliente) document.getElementById('inpCliente').value = cliente;
+  if(produto) document.getElementById('inpProduto').value = produto;
+
+  showToast('Configurações salvas');
+}
+
+function resetData(){
+  state.operacoes = [];
+  state.notas = [];
+  state.financeiro = [];
+  state.contabil = [];
+  resetFlow();
+  renderAll();
+  showToast('Dados simulados limpos');
+}
+
+/* ============================================================
+   RENDER GERAL
+   ============================================================ */
+function renderAll(){
+  renderKpis();
+  renderFiscalTable();
+  renderFinanceiroTable();
+  renderContabilTable();
+  renderRecentTable();
+  renderCharts();
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+updateTotalPreview();
+renderAll();
+</script>
+</body>
+</html>
